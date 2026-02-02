@@ -80,7 +80,7 @@ button {
   transition: left 0.3s ease, top 0.3s ease;
 }
 
-/* ---------- CMD ---------- */
+/* ---------- SHELL CMD ---------- */
 
 #cmd-window {
   width: 95%;
@@ -119,9 +119,26 @@ button {
   padding: 15px;
   overflow-y: auto;
   font-family: Consolas, monospace;
-  font-size: 1.05rem;
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.4;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- MOBILE RESPONSIVE ---------- */
+@media (max-width: 480px) {
+  #cmd-window {
+    height: 90vh;
+    width: 95%;
+  }
+  #terminal {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+  #cmd-bar {
+    font-size: 0.8rem;
+    padding: 0 6px;
+  }
 }
 </style>
 </head>
@@ -137,52 +154,46 @@ button {
 </div>
 
 <script>
+// ---------- NO che scappa ----------
 const noBtn = document.getElementById("no");
 const yesBtn = document.getElementById("yes");
 const screenPadding = 50;
 
-// Posizione iniziale NO
+// Posizione iniziale NO affiancata a YES
 noBtn.style.left = (yesBtn.offsetLeft + yesBtn.offsetWidth + 75) + "px";
 noBtn.style.top = yesBtn.offsetTop + "px";
 
 // NO scappa
-document.addEventListener("mousemove", e => {
-  const btnWidth = noBtn.offsetWidth;
-  const btnHeight = noBtn.offsetHeight;
-  const mouseX = e.clientX;
-  const mouseY = e.clientY;
+function moveNo(x, y){
   const rect = noBtn.getBoundingClientRect();
-  const btnX = rect.left + btnWidth/2;
-  const btnY = rect.top + btnHeight/2;
-
-  const dx = btnX - mouseX;
-  const dy = btnY - mouseY;
+  const dx = (rect.left + rect.width/2) - x;
+  const dy = (rect.top + rect.height/2) - y;
   const dist = Math.sqrt(dx*dx + dy*dy);
-
-  if(dist < 120) {
+  if(dist < 120){
     noBtn.style.position = "fixed";
-    let newX = btnX + (dx>0?1:-1)*(150+Math.random()*200);
-    let newY = btnY + (dy>0?1:-1)*(150+Math.random()*200);
-
-    newX = Math.min(Math.max(screenPadding,newX-btnWidth/2),window.innerWidth-btnWidth-screenPadding);
-    newY = Math.min(Math.max(screenPadding,newY-btnHeight/2),window.innerHeight-btnHeight-screenPadding);
-
-    noBtn.style.left = newX+"px";
-    noBtn.style.top = newY+"px";
+    let newX = rect.left + (dx>0?1:-1)*(150 + Math.random()*200);
+    let newY = rect.top + (dy>0?1:-1)*(150 + Math.random()*200);
+    newX = Math.min(Math.max(screenPadding,newX-rect.width/2),window.innerWidth - rect.width - screenPadding);
+    newY = Math.min(Math.max(screenPadding,newY-rect.height/2),window.innerHeight - rect.height - screenPadding);
+    noBtn.style.left = newX + "px";
+    noBtn.style.top = newY + "px";
   }
-});
+}
 
-// YES -> CMD
+document.addEventListener("mousemove", e => moveNo(e.clientX,e.clientY));
+document.addEventListener("touchmove", e => { if(e.touches.length>0) moveNo(e.touches[0].clientX,e.touches[0].clientY); });
+
+// ---------- YES click -> CMD ----------
 yesBtn.addEventListener("click", () => {
   document.body.innerHTML = `
-  <div id="cmd-window">
-    <div id="cmd-bar">
-      <span>C:\\Users\\Tamara - Prompt dei comandi</span>
-      <span id="cmd-controls"><span>_</span><span>□</span><span>X</span></span>
-    </div>
-    <div id="terminal"></div>
-  </div>`;
-
+    <div id="cmd-window">
+      <div id="cmd-bar">
+        <span>C:\\Users\\Tamara - Prompt dei comandi</span>
+        <span id="cmd-controls"><span>_</span><span>□</span><span>X</span></span>
+      </div>
+      <div id="terminal"></div>
+    </div>`;
+  
   const terminal = document.getElementById("terminal");
 
   const messages = [
@@ -202,13 +213,13 @@ yesBtn.addEventListener("click", () => {
 
   let line = 0;
 
-  function typeLine(msg, callback) {
-    const prompt = "C:\\Users\\Tamara> ";
+  function typeLine(msg, callback){
     let i = 0;
-
+    const prompt = window.innerWidth < 480 ? "> " : "C:\\Users\\Tamara> ";
     const lineDiv = document.createElement("div");
-    terminal.appendChild(lineDiv);
     lineDiv.textContent = prompt;
+    lineDiv.style.fontFamily = "Consolas, monospace";
+    terminal.appendChild(lineDiv);
 
     function typeChar(){
       if(i < msg.length){
@@ -229,6 +240,7 @@ yesBtn.addEventListener("click", () => {
         setTimeout(nextLine, 250 + Math.random()*500);
       });
     } else {
+      // righe finali
       const f1 = document.createElement("div");
       f1.style.color="#ff69b4";
       f1.textContent="So di essere cringe ma non mi importa";
@@ -249,3 +261,5 @@ yesBtn.addEventListener("click", () => {
 
 </body>
 </html>
+
+
